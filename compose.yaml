@@ -14,10 +14,10 @@ services:
     container_name: backend
     restart: always
     environment:
-      DB_HOST: db
-      DB_USER: myuser
-      DB_PASSWORD: mypassword
-      DB_NAME: image_favorites
+      DB_HOST: ${MYSQL_HOST}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
       UNSPLASH_API_KEY: ${UNSPLASH_API_KEY}
     ports:
       - "5000:5000"
@@ -32,11 +32,13 @@ services:
     image: mysql:5.7
     container_name: db
     restart: always
+    env_file:
+      - ./.env
     environment:
-      MYSQL_ROOT_PASSWORD: new_root_password
-      MYSQL_DATABASE: image_favorites
-      MYSQL_USER: myuser
-      MYSQL_PASSWORD: mypassword
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql

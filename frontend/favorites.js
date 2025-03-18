@@ -7,6 +7,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await res.json();
       console.log(data);
 
+      if (data.length === 0) {
+          favoritesCount.textContent = "Aucune image en favoris";
+          return;
+      }
       favoritesCount.textContent = `Nombre d'images : ${data.length}`;
 
       data.forEach((favorite) => {

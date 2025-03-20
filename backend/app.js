@@ -14,24 +14,18 @@ console.log("Password:", process.env.MYSQL_PASSWORD);
 console.log("Database:", process.env.MYSQL_DATABASE);
 console.log("Port:", process.env.MYSQL_PORT);
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
-    port: process.env.MYSQL_PORT
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error("erreur de connexion à MySQL:", err);
-    } else {
-        console.log("connecté à la base de données");
-    }
+    port: process.env.MYSQL_PORT,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 const UNSPLASH_API_KEY = process.env.UNSPLASH_API_KEY;
-
 
 app.get('/search', async (req, res) => {
     const { page, query, lang } = req.query;
@@ -52,8 +46,6 @@ app.get('/search', async (req, res) => {
 app.post('/favorites', (req, res) => {
     console.log("Données reçues dans /favorites:", req.body);
     const { imageUrl, description } = req.body;
-    console.log("imageUrl:", imageUrl);
-    console.log("description:", description);
 
     if (!imageUrl) {
         console.error("L'URL de l'image est requise");
@@ -61,21 +53,21 @@ app.post('/favorites', (req, res) => {
     }
 
     const sql = "INSERT INTO favorites (imageUrl, description) VALUES (?, ?)";
-    db.query(sql, [imageUrl, description || "Image sans description"], (err, result) => {
+    pool.query(sql, [imageUrl, description || "Image sans description"], (err, result) => {
         if (err) {
             console.error("Erreur MySQL :", err);
-            return res.status(500).json({ error: "erreur lors de l'ajout à la bdd" });
+            return res.status(500).json({ error: "Erreur lors de l'ajout à la bdd" });
         }
         console.log("Résultat SQL :", result);
-        res.json({ message: "image ajoutée aux favoris", id: result.insertId });
+        res.json({ message: "Image ajoutée aux favoris", id: result.insertId });
     });
 });
 
 app.get('/favorites', (req, res) => {
-    db.query("SELECT * FROM favorites", (err, results) => {
+    pool.query("SELECT * FROM favorites", (err, results) => {
         if (err) {
             console.error("Erreur MySQL :", err);
-            return res.status(500).json({ error: "erreur lors de la récup des favoris" });
+            return res.status(500).json({ error: "Erreur lors de la récup des favoris" });
         }
         console.log("Résultats SQL :", results);
         res.json(results);
